@@ -32,6 +32,29 @@ func CreateUserInDB(users model.UserReg) error {
 
 }
 
+func LoginUser(user model.UserReg) error {
+
+	var hashPassword string
+	var storedEmail string
+
+	QueryString := `SELECT lower(email), password FROM users WHERE email = $1`
+	err := Database.DBconn.QueryRow(QueryString, user.Email).Scan(&storedEmail, &hashPassword)
+	if err != nil {
+		if err != nil {
+
+			return fmt.Errorf("no user found with email: %s", user.Email)
+		}
+		return fmt.Errorf("error querying database: %w", err)
+	}
+
+	res := encryption.VerifyPassword(user.Password, hashPassword)
+	if res == true && user.Email == storedEmail {
+		return nil
+	}
+
+	return nil
+}
+
 func CreateTodoInDb(todos model.Todos) error {
 	QueryString := "insert into usertodo (todoname, tododescription  ) VALUES ($1,$2 ) "
 

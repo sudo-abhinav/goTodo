@@ -23,6 +23,7 @@ func main() {
 
 		//	user Registration
 		r.Post("/reg", handler.UserRegstration)
+		r.Post("/login", handler.UserLogin)
 	})
 
 	err := http.ListenAndServe(":3000", r)
