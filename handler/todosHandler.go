@@ -15,7 +15,7 @@ import (
 )
 
 func UserRegstration(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Type", "application/json")
 
 	log.Printf("Received %s request for %s", r.Method, r.URL.Path)
 
@@ -44,6 +44,27 @@ func UserRegstration(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode("user Created")
 
+}
+
+func UserLogin(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println(r.Body)
+
+	if r.Body == nil {
+		err := json.NewEncoder(w).Encode("please send some data")
+		if err != nil {
+			return
+		}
+	}
+	var loginData model.UserReg
+	if err := json.NewDecoder(r.Body).Decode(&loginData); err != nil {
+		response.RespondWithError(w, http.StatusBadRequest, "invalid payload request")
+	}
+
+	if err := services.LoginUser(loginData); err != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, "error creating user")
+	}
+	json.NewEncoder(w).Encode("LoggedIN")
 }
 
 func GetAllTodo(w http.ResponseWriter, r *http.Request) {
