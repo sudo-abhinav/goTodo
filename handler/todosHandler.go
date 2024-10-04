@@ -157,42 +157,6 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("Todo Deleted")
 }
 
-//func UpdateTodo(w http.ResponseWriter, r *http.Request) {
-//
-//	fmt.Println(r.Body)
-//	if r.Body == nil {
-//		json.NewEncoder(w).Encode("please send all data")
-//	} else {
-//		fmt.Println("hello")
-//	}
-//	var todos model.Todos
-//	err := json.NewDecoder(r.Body).Decode(&todos)
-//	if err != nil {
-//		return
-//	}
-//
-//	fmt.Println(todos)
-//	query := "UPDATE usertodo SET todoname = $1, tododescription=$2 ,updateat=$3 WHERE id=$4"
-//	res, err := Database.DBconn.Exec(query, todos.TodoName, todos.TodoDescription, time.Now(), todos.Id)
-//	if err == nil {
-//		count, err := res.RowsAffected()
-//		fmt.Println(count)
-//		if err == nil {
-//			if count == 1 {
-//				fmt.Println("test error1")
-//				json.NewEncoder(w).Encode("Todo Updated ")
-//			} else {
-//				fmt.Println("test error3")
-//				json.NewEncoder(w).Encode("No Todo Founded")
-//			}
-//		}
-//
-//	} else {
-//		json.NewEncoder(w).Encode("error in db query")
-//	}
-//
-//}
-
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		response.RespondWithError(w, http.StatusBadRequest, "please send all data")
