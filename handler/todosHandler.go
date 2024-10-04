@@ -26,19 +26,19 @@ func UserRegstration(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	var Users model.UserReg
-	fmt.Println(Users)
-	err := json.NewDecoder(r.Body).Decode(&Users)
+	var data model.UserReg
+	err := json.NewDecoder(r.Body).Decode(&data)
+	fmt.Println(data)
 	if err != nil {
 		response.RespondWithError(w, http.StatusBadRequest, "invalid request payload")
 		return
 	}
-	if Users.UserName == "" || Users.Email == "" || Users.Password == "" {
+	if data.UserName == "" || data.Email == "" || data.Password == "" {
 		response.RespondWithError(w, http.StatusBadRequest, "username, email, and password are required")
 		return
 	}
 
-	if err := services.CreateUserInDB(Users); err != nil {
+	if err := services.CreateUserInDB(data); err != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, "error creating user")
 		return
 	}

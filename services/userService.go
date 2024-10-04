@@ -8,17 +8,16 @@ import (
 	"time"
 )
 
-func CreateUserInDB(user model.UserReg) error {
+func CreateUserInDB(users model.UserReg) error {
 	//here i am creating hash password for security reason
-	hashPWD, err := encryption.HashPassword(user.Password)
+	hashPWD, err := encryption.HashPassword(users.Password)
 	if err != nil {
+
 		return fmt.Errorf("error hashing password: %w", err)
 	}
-
 	// Prepare the SQL query
 	queryString := `INSERT INTO users (username, email, password) VALUES ($1, $2, $3)`
-
-	res, err := Database.DBconn.Exec(queryString, user.UserName, user.Email, hashPWD)
+	res, err := Database.DBconn.Exec(queryString, users.UserName, users.Email, hashPWD)
 	if err != nil {
 		return err
 	}
@@ -26,11 +25,9 @@ func CreateUserInDB(user model.UserReg) error {
 	if err != nil {
 		return err
 	}
-
 	if count == 0 {
 		return fmt.Errorf("no User created")
 	}
-
 	return nil
 
 }
