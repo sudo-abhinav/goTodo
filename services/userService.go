@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+/*
+	1) Make a dbHelper folder and try to put all db related file there
+	2) Put different kind of functions in different files (Ex: RegisterUser and login in user.go inside dbHelper)
+*/
+
 func CreateUserInDB(users model.UserReg) error {
 	//here i am creating hash password for security reason
 	hashPWD, err := encryption.HashPassword(users.Password)
@@ -56,12 +61,21 @@ func LoginUser(user model.UserReg) error {
 }
 
 func CreateTodoInDb(todos model.Todos) error {
+
+	/*
+		1) You should insert userId also in todo table otherwsie how you will identify which todo is created by which user
+		2) you can have one more variable as isCompleted to determine whether the todo is completed or not
+	*/
+
 	QueryString := "insert into usertodo (todoname, tododescription  ) VALUES ($1,$2 ) "
 
 	res, err := Database.DBconn.Exec(QueryString, todos.TodoName, todos.TodoDescription)
 	if err != nil {
 		return err
 	}
+
+	// No need to count the created records
+
 	count, err := res.RowsAffected()
 	if err != nil {
 		return err

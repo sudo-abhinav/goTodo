@@ -5,7 +5,12 @@ import (
 	"net/http"
 )
 
+// No need to create a function fot this
+
 func HealthChecker(w http.ResponseWriter, r *http.Request) {
+
+	// Send the response in json format
+	// Make separate function for Encode JSON and Respond JSON
 
 	if ServerIsHealthy() {
 		w.WriteHeader(http.StatusOK)

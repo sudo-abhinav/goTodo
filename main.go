@@ -10,10 +10,24 @@ import (
 
 func main() {
 
+	/*
+		1) try to keep main.go in a cmd folder
+		2) group public routes that do not need authentication like register, login, healthcheck
+		3) group private routes that needs authentication
+		4) Need to add middleware for authentication
+		5) Create a separate DB call
+		6) Create a separate routes file in srever.go and placed the file in server folder
+	*/
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+
+	// you can directly respond here only like sever is running...
+
 	r.Get("/healthcheck", handler.HealthChecker)
 	r.Route("/api", func(r chi.Router) {
+
+		// routes name should be relevant so that we can identify the task
 
 		r.Get("/data", handler.GetAllTodo) // get All todo
 		r.Get("/databyid/{id}", handler.GetTodoById)

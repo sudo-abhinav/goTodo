@@ -14,10 +14,18 @@ import (
 	"strconv"
 )
 
+/*
+	Put user related handler in user.go and todo related in todo.go
+*/
+
 func UserRegstration(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Content-Type", "application/json")
 
+	// No need to print such kind of things try to log relevant things
+
 	log.Printf("Received %s request for %s", r.Method, r.URL.Path)
+
+	// Create a separate parseBody function in utils.go and call it whenever needed
 
 	log.Print("just print ", r.Body)
 	if r.Body == nil {
@@ -42,6 +50,10 @@ func UserRegstration(w http.ResponseWriter, r *http.Request) {
 		response.RespondWithError(w, http.StatusInternalServerError, "error creating user")
 		return
 	}
+
+	// Create a separate EncodeJSON and RespondJSON function in utils.go
+	// Send status code also in response
+
 	json.NewEncoder(w).Encode("user Created")
 
 }
@@ -65,6 +77,10 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		response.RespondWithError(w, http.StatusInternalServerError, "error creating user")
 	}
 	json.NewEncoder(w).Encode("LoggedIN")
+
+	/*
+		1) You are not using JWT and session management
+	*/
 }
 
 func GetAllTodo(w http.ResponseWriter, r *http.Request) {
@@ -72,10 +88,15 @@ func GetAllTodo(w http.ResponseWriter, r *http.Request) {
 	var posts []model.Todos
 	//defer Database.DbConnectionClose()
 
+	// Make the separate function for every query and put it in dbHelper folder
+
 	rows, err := Database.DBconn.Query("select usertodo.id , usertodo.todoname , usertodo.tododescription , usertodo.iscompleted from usertodo")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Use select function and store all the results in a model once
+
 	//log.Print(rows)
 	for rows.Next() {
 		//data := model.Todos{}
@@ -105,6 +126,9 @@ func GetTodoById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//return http.StatusBadRequest
 		w.Write([]byte("no data found"))
+
+		// status code should be 200 - StatusOK
+
 		w.WriteHeader(404)
 		return
 		//log.Fatal("error in Query string : ", err)
