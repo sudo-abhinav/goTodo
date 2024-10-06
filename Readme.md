@@ -35,6 +35,17 @@
     "TodoDescription" : "test23332 "
 }
 ```
+## User can Update Todo:-
+
+```http
+  POST /api/updatetodo
+  
+   JSON: {
+    "id": "7",
+    "todoName": "go lang",
+    "todoDescription": "lots of error in go lang "
+}
+```
 
 
 ## User can Delete Todo By Id:-
