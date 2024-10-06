@@ -62,6 +62,8 @@ func CreateTodoInDb(todos model.Todos) error {
 	if err != nil {
 		return err
 	}
+
+	//todo please ignore count
 	count, err := res.RowsAffected()
 	if err != nil {
 		return err
@@ -94,6 +96,7 @@ func UpdateTodoInDB(todos model.Todos) error {
 	return nil
 }
 
+// todo use archived _at column not hard delete the data
 func DeleteTodoInDB(param model.DeleteTodos) error {
 	res, err := Database.DBconn.Exec("DELETE FROM usertodo WHERE id=$1", param.Id)
 	if err != nil {

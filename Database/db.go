@@ -11,6 +11,8 @@ var (
 	DBconn *sqlx.DB
 )
 
+// todo db credentials takes from env
+// todo write migration
 func init() {
 	dbs := "host=localhost port=5433 user=local password=local dbname=todo sslmode=disable"
 	//fmt.Println("line printing")
