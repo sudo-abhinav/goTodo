@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type UserReg struct {
 	Id        int       `json:"id" db:"id , Primary key"`

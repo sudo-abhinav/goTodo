@@ -3,10 +3,14 @@ package services
 import (
 	"fmt"
 	"github.com/sudo-abhinav/go-todo/Database"
+	"github.com/sudo-abhinav/go-todo/auth"
 	"github.com/sudo-abhinav/go-todo/model"
 	"github.com/sudo-abhinav/go-todo/utils/encryption"
+	"net/http"
 	"time"
 )
+
+var SecretKey = "secret-key-from-japan"
 
 func CreateUserInDB(users model.UserReg) error {
 	//here i am creating hash password for security reason
@@ -49,7 +53,15 @@ func LoginUser(user model.UserReg) error {
 
 	res := encryption.VerifyPassword(user.Password, hashPassword)
 	if res == true && user.Email == storedEmail {
-		return nil
+		tokenString, err := auth.CreateToken(user.Email)
+		if err != nil {
+			return err
+		}
+		http.SetCookie(&http.Cookie{
+			Name:    "token",
+			Value:   tokenString,
+			Expires: expirationTime,
+		})
 	}
 
 	return nil

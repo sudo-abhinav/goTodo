@@ -15,7 +15,7 @@ func main() {
 	r.Get("/healthcheck", handler.HealthChecker)
 	r.Route("/api", func(r chi.Router) {
 
-		r.Get("/data", handler.GetAllTodo) // get All todo
+		r.Get("/data", handler.GetAllTodo) // TODO :- this is only for testing purpose
 		r.Get("/databyid/{id}", handler.GetTodoById)
 		r.Post("/createTodo", handler.CreateTodo)
 		r.Delete(`/deleteById/{id}`, handler.DeleteTodoById)

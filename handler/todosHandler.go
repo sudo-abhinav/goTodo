@@ -59,12 +59,13 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	var loginData model.UserReg
 	if err := json.NewDecoder(r.Body).Decode(&loginData); err != nil {
 		response.RespondWithError(w, http.StatusBadRequest, "invalid payload request")
+
 	}
 
 	if err := services.LoginUser(loginData); err != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, "error creating user")
 	}
-	json.NewEncoder(w).Encode("LoggedIN")
+	response.RespondJSON(w, http.StatusCreated, "loggedIn")
 }
 
 func GetAllTodo(w http.ResponseWriter, r *http.Request) {
