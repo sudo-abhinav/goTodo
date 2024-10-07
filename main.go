@@ -13,7 +13,7 @@ func main() {
 	/*
 		1) try to keep main.go in a cmd folder
 		2) group public routes that do not need authentication like register, login, healthcheck
-		3) group private routes that needs authentication
+		3) group protected routes that needs authentication
 		4) Need to add middleware for authentication
 		5) Create a separate DB call
 		6) Create a separate routes file in srever.go and placed the file in server folder
