@@ -9,6 +9,7 @@ import (
 
 func RespondWithError(w http.ResponseWriter, code int, message string) {
 	w.WriteHeader(code)
+	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(map[string]string{"error": message})
 	if err != nil {
 		return
@@ -33,9 +34,10 @@ func EncodeJSONBody(resp http.ResponseWriter, data interface{}) error {
 // RespondJSON sends the interface as a JSON
 func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 	w.WriteHeader(statusCode)
+	w.Header().Set("Content-Type", "application/json")
 	if body != nil {
 		if err := EncodeJSONBody(w, body); err != nil {
-			logrus.Errorf("Failed to respond JSON with error: %+v", err)
+			logrus.Errorf("Failed to respond JSON : %+v", err)
 		}
 	}
 }

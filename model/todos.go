@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Todos struct {
-	Id              int       `json:"id" db:"id, primary key"`
+	Id              int       `json:"id" db:"id"`
 	TodoName        string    `json:"todoName" db:"todoname"`
 	TodoDescription string    `json:"todoDescription" db:"tododescription"`
 	IsCompleted     bool      `json:"iscompleted" db:"iscompleted"`
