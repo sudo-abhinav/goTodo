@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/sudo-abhinav/go-todo/Database"
 	"github.com/sudo-abhinav/go-todo/model"
 	"github.com/sudo-abhinav/go-todo/services"
@@ -12,7 +13,15 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
+
+type Claim struct {
+	Email string `json:"email"`
+	jwt.RegisteredClaims
+}
+
+var jwtKey = []byte("supersecretkey")
 
 func UserRegstration(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Content-Type", "application/json")
@@ -51,20 +60,41 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Body)
 
 	if r.Body == nil {
+		//response.RespondJSON(w, http.StatusBadRequest, "please send some data")
 		err := json.NewEncoder(w).Encode("please send some data")
 		if err != nil {
 			return
 		}
 	}
+
 	var loginData model.UserReg
-	if err := json.NewDecoder(r.Body).Decode(&loginData); err != nil {
-		response.RespondWithError(w, http.StatusBadRequest, "invalid payload request")
+	if parseErr := response.ParseBody(r.Body, &loginData); parseErr != nil {
+		response.RespondJSON(w, http.StatusBadRequest, "failed to parse request body")
+		return
 	}
 
 	if err := services.LoginUser(loginData); err != nil {
-		response.RespondWithError(w, http.StatusInternalServerError, "error creating user")
+		response.RespondJSON(w, http.StatusInternalServerError, "unauthorised access")
 	}
-	json.NewEncoder(w).Encode("LoggedIN")
+	expirationTime := time.Now().Add(2 * time.Hour)
+	claim := &Claim{
+		Email: loginData.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		response.RespondJSON(w, http.StatusInternalServerError, "unable to set cookie")
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   tokenString,
+		Expires: expirationTime,
+	})
+	response.RespondJSON(w, http.StatusCreated, "loggedIn")
 }
 
 func GetAllTodo(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +106,7 @@ func GetAllTodo(w http.ResponseWriter, r *http.Request) {
 	//4.todo use select function
 	rows, err := Database.DBconn.Query("select usertodo.id , usertodo.todoname , usertodo.tododescription , usertodo.iscompleted from usertodo")
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	//log.Print(rows)
 	for rows.Next() {
@@ -85,7 +115,7 @@ func GetAllTodo(w http.ResponseWriter, r *http.Request) {
 		err := rows.Scan(&data.Id, &data.TodoName, &data.TodoDescription, &data.IsCompleted)
 		if err != nil {
 			fmt.Println("error", err)
-			log.Fatal(err)
+
 		}
 		posts = append(posts, data)
 	}
@@ -109,7 +139,7 @@ func GetTodoById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("no data found"))
 		w.WriteHeader(404)
 		return
-		//log.Fatal("error in Query string : ", err)
+
 	}
 	err = json.NewEncoder(w).Encode(todo)
 	if err != nil {
@@ -173,5 +203,6 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		response.RespondWithError(w, http.StatusInternalServerError, "error updating todo")
 		return
 	}
-	json.NewEncoder(w).Encode("Todo Updated")
+	response.RespondJSON(w, http.StatusCreated, "Todo Update..")
+	//json.NewEncoder(w).Encode("Todo Updated")
 }

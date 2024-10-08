@@ -15,15 +15,16 @@ func main() {
 	r.Get("/healthcheck", handler.HealthChecker)
 	r.Route("/api", func(r chi.Router) {
 
-		r.Get("/data", handler.GetAllTodo) // get All todo
+		//	user Registration
+		r.Post("/reg", handler.UserRegstration)
+		r.Post("/login", handler.UserLogin)
+
+		r.Get("/data", handler.GetAllTodo) // TODO :- this is only for testing purpose
 		r.Get("/databyid/{id}", handler.GetTodoById)
 		r.Post("/createTodo", handler.CreateTodo)
 		r.Delete(`/deleteById/{id}`, handler.DeleteTodoById)
 		r.Put("/updatetodo", handler.UpdateTodo)
 
-		//	user Registration
-		r.Post("/reg", handler.UserRegstration)
-		r.Post("/login", handler.UserLogin)
 	})
 
 	err := http.ListenAndServe(":3000", r)

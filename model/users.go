@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // 1.todo do not use primary key and it is use serial in db auto which is auto genrated
 type UserReg struct {
