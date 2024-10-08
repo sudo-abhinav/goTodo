@@ -14,17 +14,16 @@ var (
 	DBconn *sqlx.DB
 )
 
- feat/comments
-// 6.todo db credentials takes from env
-// 7.todo write migration
-=======
+//feat/comments
+// 6.todo db credentials takes from env : = working on that
+// 7.todo write migration : done
+
 type SSLMode string
 
 const (
 	SSLModeDisable SSLMode = "disable"
 )
 
- master
 func init() {
 	dbs := "host=localhost port=5433 user=local password=local dbname=todo sslmode=ss"
 	//fmt.Println("line printing")
