@@ -25,7 +25,7 @@ var jwtKey = []byte("supersecretkey")
 
 func UserRegstration(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Content-Type", "application/json")
-
+	//2.todo :  use validator
 	log.Printf("Received %s request for %s", r.Method, r.URL.Path)
 
 	log.Print("just print ", r.Body)
@@ -99,9 +99,11 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 func GetAllTodo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-Type", "application/json")
+	//3.todo define [] using make keyword as possible because it creates by default null
 	var posts []model.Todos
 	//defer Database.DbConnectionClose()
 
+	//4.todo use select function
 	rows, err := Database.DBconn.Query("select usertodo.id , usertodo.todoname , usertodo.tododescription , usertodo.iscompleted from usertodo")
 	if err != nil {
 		return
