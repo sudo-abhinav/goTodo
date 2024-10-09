@@ -7,10 +7,11 @@ import (
 	"net/http"
 )
 
-func RespondWithError(w http.ResponseWriter, code int, message string) {
+// w http.ResponseWriter, statusCode int, body interface{}
+func RespondWithError(w http.ResponseWriter, code int, body interface{}) {
 	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(map[string]string{"error": message})
+	err := json.NewEncoder(w).Encode(body)
 	if err != nil {
 		return
 	}

@@ -18,7 +18,6 @@ func CreateUserInDB(users model.UserReg) error {
 	if err != nil {
 		return fmt.Errorf("error hashing password: %w", err)
 	}
-	// Prepare the SQL query
 	queryString := `INSERT INTO users (username, email, password) VALUES ($1, $2, $3)`
 	res, err := Database.DBconn.Exec(queryString, users.UserName, users.Email, hashPWD)
 	if err != nil {
