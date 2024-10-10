@@ -6,14 +6,15 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sudo-abhinav/go-todo/Database"
+	"github.com/sudo-abhinav/go-todo/Database/dbHelper"
+	"github.com/sudo-abhinav/go-todo/middlewares"
 	"github.com/sudo-abhinav/go-todo/model"
-	"github.com/sudo-abhinav/go-todo/services"
+	"github.com/sudo-abhinav/go-todo/utils/encryption"
 	"github.com/sudo-abhinav/go-todo/utils/response"
 	_ "github.com/sudo-abhinav/go-todo/utils/response"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type Claim struct {
@@ -21,14 +22,10 @@ type Claim struct {
 	jwt.RegisteredClaims
 }
 
-var jwtKey = []byte("supersecretkey")
-
-func UserRegstration(w http.ResponseWriter, r *http.Request) {
+func UserRegistration(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Content-Type", "application/json")
 	//2.todo :  use validator
-	log.Printf("Received %s request for %s", r.Method, r.URL.Path)
 
-	log.Print("just print ", r.Body)
 	if r.Body == nil {
 		err := json.NewEncoder(w).Encode("please send some data")
 		if err != nil {
@@ -36,22 +33,37 @@ func UserRegstration(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	var data model.UserReg
-	err := json.NewDecoder(r.Body).Decode(&data)
-	fmt.Println(data)
-	if err != nil {
-		response.RespondWithError(w, http.StatusBadRequest, "invalid request payload")
+	userCtx := middlewares.UserContext(r)
+	data.Id = userCtx.UserID
+
+	//err := json.NewDecoder(r.Body).Decode(&data)
+	if parseErr := response.ParseBody(r.Body, &data); parseErr != nil {
+		response.RespondJSON(w, http.StatusBadRequest, "invalid request payload")
 		return
 	}
-	if data.UserName == "" || data.Email == "" || data.Password == "" {
-		response.RespondWithError(w, http.StatusBadRequest, "username, email, and password are required")
+	if data.UserName == "" && data.Email == "" && data.Password == "" {
+		response.RespondJSON(w, http.StatusBadRequest, "username, email, and password are required")
+		return
+	}
+	if len(data.Password) <= 6 {
+		response.RespondJSON(w, http.StatusBadRequest, "password length greater than 6 char")
+		return
+	}
+	exists, existsErr := dbHelper.IsUserExists(data.Email)
+	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
+		response.RespondJSON(w, http.StatusInternalServerError, "error creating user")
+		return
+	}
+	if existsErr != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, existsErr, "failed to check user existence")
 		return
 	}
 
-	if err := services.CreateUserInDB(data); err != nil {
-		response.RespondWithError(w, http.StatusInternalServerError, "error creating user")
+	if exists {
+		response.RespondJSON(w, http.StatusBadRequest, "user already exists")
 		return
 	}
-	json.NewEncoder(w).Encode("user Created")
+	response.RespondJSON(w, http.StatusCreated, "user Registered..")
 
 }
 
@@ -67,44 +79,57 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var loginData model.UserReg
+	var loginData model.Login
 	if parseErr := response.ParseBody(r.Body, &loginData); parseErr != nil {
 		response.RespondJSON(w, http.StatusBadRequest, "failed to parse request body")
 		return
 	}
 
-	if err := services.LoginUser(loginData); err != nil {
+	userID, username, userErr := dbHelper.GetUser(loginData.Email, loginData.Password)
+
+	if userErr != nil {
 		response.RespondJSON(w, http.StatusInternalServerError, "unauthorised access")
 	}
-	expirationTime := time.Now().Add(2 * time.Hour)
-	claim := &Claim{
-		Email: loginData.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
+
+	if userID == "" || username == "" {
+		response.RespondWithError(w, http.StatusNotFound, nil, "user not found")
+		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	tokenString, err := token.SignedString(jwtKey)
-	if err != nil {
-		response.RespondJSON(w, http.StatusInternalServerError, "unable to set cookie")
+	SessionTicket, SessErr := dbHelper.CreateUserSession(userID)
+	if SessErr != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, SessErr, "failed to create user session")
+		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   tokenString,
-		Expires: expirationTime,
-	})
-	response.RespondJSON(w, http.StatusCreated, "loggedIn")
+
+	tokenString, tokenErr := encryption.GenerateJWT(userID, loginData.Email, SessionTicket)
+	if tokenErr != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, tokenErr, "failed to generate token")
+		return
+	}
+	response.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+		Token   string `json:"token"`
+	}{"user logged in successfully", tokenString})
+
+	//TODO :-  am trying to add token in cookie
+	//http.SetCookie(w, &http.Cookie{
+	//	Name:    "Token",
+	//	Value:   tokenString,
+	//	Expires: time.Now().Add(time.Minute * 2),
+	//})
+	//response.RespondJSON(w, http.StatusCreated, "loggedIn")
+
 }
 
-func GetAllTodo(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-Type", "application/json")
+func GetAllTodo(w http.ResponseWriter, r http.Request) {
+	//w.Header().Set("content-Type", "application/json")
 	//3.todo define [] using make keyword as possible because it creates by default null
 	var posts []model.Todos
 	//defer Database.DbConnectionClose()
 
 	//4.todo use select function
-	rows, err := Database.DBconn.Query("select usertodo.id , usertodo.todoname , usertodo.tododescription , usertodo.iscompleted from usertodo")
+	rows, err := Database.DBconn.Query("select usertodo.id , usertodo.todoname , usertodo.tododescription from usertodo")
 	if err != nil {
 		return
 	}
@@ -132,7 +157,7 @@ func GetTodoById(w http.ResponseWriter, r *http.Request) {
 	var todo model.Todos
 	Param := chi.URLParam(r, "id")
 	//fmt.Println(Param)
-	QueryString := `select id,todoname , tododescription , iscompleted FROM usertodo WHERE id = $1`
+	QueryString := `select id,todoname , tododescription , is_completed FROM usertodo WHERE id = $1`
 	err := Database.DBconn.Get(&todo, QueryString, Param)
 	if err != nil {
 		//return http.StatusBadRequest
@@ -154,17 +179,24 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 	//log.Print("just print", r.Body)
 	if r.Body == nil {
 		json.NewEncoder(w).Encode("please send some data")
+
+	}
+
+	var loginData model.Login
+	if parseErr := response.ParseBody(r.Body, &loginData); parseErr != nil {
+		response.RespondJSON(w, http.StatusBadRequest, "failed to parse request body")
+		return
 	}
 	var todos model.Todos
 	if err := json.NewDecoder(r.Body).Decode(&todos); err != nil {
-		response.RespondWithError(w, http.StatusBadRequest, "invalid request payload")
+		response.RespondWithError(w, http.StatusBadRequest, err, "invalid request payload")
 		return
 	}
-	if err := services.CreateTodoInDb(todos); err != nil {
-		response.RespondWithError(w, http.StatusInternalServerError, "error creating todo")
+	if err := dbHelper.CreateTodoInDb(todos); err != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, err, "error creating todo")
 		return
 	}
-	json.NewEncoder(w).Encode("Todo Created")
+	response.RespondJSON(w, http.StatusCreated, "Todo Created..")
 
 }
 
@@ -180,27 +212,29 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 	}
 	deleteTodo := model.DeleteTodos{Id: id}
 
-	err = services.DeleteTodoInDB(deleteTodo)
+	err = dbHelper.DeleteTodoInDB(deleteTodo)
 	if err != nil {
-		response.RespondWithError(w, http.StatusInternalServerError, "error Deleting todo")
+		response.RespondWithError(w, http.StatusInternalServerError, err, "error Deleting todo")
 		return
 
 	}
-	json.NewEncoder(w).Encode("Todo Deleted")
+
+	response.RespondJSON(w, http.StatusOK, "Todo Update..")
+	//json.NewEncoder(w).Encode("Todo Deleted")
 }
 
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
-		response.RespondWithError(w, http.StatusBadRequest, "please send all data")
+		response.RespondJSON(w, http.StatusBadRequest, "please send all data")
 		return
 	}
 	var todos model.Todos
 	if err := json.NewDecoder(r.Body).Decode(&todos); err != nil {
-		response.RespondWithError(w, http.StatusBadRequest, "invalid request payload")
+		response.RespondWithError(w, http.StatusBadRequest, err, "invalid request payload")
 		return
 	}
-	if err := services.UpdateTodoInDB(todos); err != nil {
-		response.RespondWithError(w, http.StatusInternalServerError, "error updating todo")
+	if err := dbHelper.UpdateTodoInDB(todos); err != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, err, "error updating todo")
 		return
 	}
 	response.RespondJSON(w, http.StatusCreated, "Todo Update..")

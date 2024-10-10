@@ -8,12 +8,12 @@ import (
 )
 
 // w http.ResponseWriter, statusCode int, body interface{}
-func RespondWithError(w http.ResponseWriter, code int, body interface{}) {
+func RespondWithError(w http.ResponseWriter, code int, err error, body interface{}) {
 	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(body)
+	err = json.NewEncoder(w).Encode(body)
 	if err != nil {
-		return
+		logrus.Errorf("Failed to send error to caller with error: %+v", err)
 	}
 }
 

@@ -3,7 +3,10 @@ package routes
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sudo-abhinav/go-todo/handler"
+	"github.com/sudo-abhinav/go-todo/middlewares"
+	_ "github.com/sudo-abhinav/go-todo/middlewares"
 	"github.com/sudo-abhinav/go-todo/utils/response"
 	"net/http"
 	"time"
@@ -24,21 +27,23 @@ func SetupRoutes() *Server {
 	router := chi.NewRouter()
 
 	router.Route("/v1", func(r chi.Router) {
+		r.Use(middleware.Logger)
 		r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-			response.RespondWithError(w, http.StatusOK, struct {
+			response.RespondJSON(w, http.StatusOK, struct {
 				Status string `json:"status"`
 			}{Status: "server is running"})
 		})
-		r.Post("/reg", handler.UserRegstration)
+		r.Post("/reg", handler.UserRegistration)
 		r.Post("/login", handler.UserLogin)
 	})
 
 	router.Group(func(r chi.Router) {
+		r.Use(middlewares.Authenticate)
 		//task:-here we use middlewre for authentication
 
-		r.Get("/data", handler.GetAllTodo) // TODO :- this is only for testing purpose
-		r.Get("/databyid/{id}", handler.GetTodoById)
+		//r.Get("/data", handler.GetAllTodo) // TODO :- this is only for testing purpose
 		r.Post("/createTodo", handler.CreateTodo)
+		r.Get("/databyid/{id}", handler.GetTodoById)
 		r.Delete(`/deleteById/{id}`, handler.DeleteTodoById)
 		r.Put("/updatetodo", handler.UpdateTodo)
 	})
