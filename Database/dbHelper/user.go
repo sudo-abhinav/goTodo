@@ -11,6 +11,7 @@ import (
 
 func CreateUserInDB(UserName, email, password string) error {
 	//here i am creating hash password for security reason
+
 	hashPWD, err := encryption.HashPassword(password)
 	if err != nil {
 		return fmt.Errorf("error hashing password: %w", err)
@@ -43,10 +44,7 @@ func GetUser(email, password string) (string, string, error) {
 	var hashPassword string
 	var storedEmail string
 
-	QueryString := `SELECT u.id,
-       			  u.email,
-				   u.password
-			  FROM users u
+	QueryString := `SELECT u.id, u.email, u.password FROM users u
 			  WHERE u.archived_at IS NULL
 			    AND u.email = TRIM($1)`
 	err := Database.DBconn.QueryRowx(QueryString, email).Scan(&storedId, &storedEmail, &hashPassword)
@@ -68,15 +66,15 @@ func GetUser(email, password string) (string, string, error) {
 
 func IsUserExists(email string) (bool, error) {
 	SQLQuery := `SELECT email from users WHERE email = TRIM(LOWER($1))`
-	var Useremail string
-	err := Database.DBconn.Get(&Useremail, SQLQuery, email)
+	var UserExisting bool
+	err := Database.DBconn.Get(&UserExisting, SQLQuery, email)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return false, err
 	}
-	if errors.Is(err, sql.ErrNoRows) {
-		return false, nil
-	}
-	return true, nil
+	//if errors.Is(err, sql.ErrNoRows) {
+	//	return false, nil
+	//}
+	return UserExisting, nil
 }
 
 func DeleteUser() {

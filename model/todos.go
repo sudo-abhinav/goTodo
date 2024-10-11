@@ -4,12 +4,12 @@ type Todos struct {
 	Id              string `json:"id" db:"id"`
 	TodoName        string `json:"todoName" db:"todoname"`
 	TodoDescription string `json:"todoDescription" db:"tododescription"`
-	IsCompleted     bool   `json:"iscompleted" db:"iscompleted"`
-	UserId          int    `json:"user_id" db:"userId"` //Foregin key for user who owns this todo
+	IsCompleted     bool   `json:"is_completed" db:"is_completed"`
+	UserId          string `json:"userid" db:"userid"` //Foregin key for user who owns this todo
 }
 
 type DeleteTodos struct {
-	Id int `json:"id" db:"id, primary key"`
+	Id int `json:"id" db:"id"`
 }
 
 //type UpdateTodos struct {

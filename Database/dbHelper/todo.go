@@ -7,22 +7,22 @@ import (
 	"time"
 )
 
-func CreateTodoInDb(todos model.Todos) error {
-	QueryString := "insert into usertodo (todoname, tododescription  ) VALUES ($1,$2 ) "
-	res, err := Database.DBconn.Exec(QueryString, todos.TodoName, todos.TodoDescription)
+func CreateTodoInDb(todoname, tododescription, userID string) error {
+	QueryString := "insert into usertodo (todoname, tododescription ,userid ) VALUES ($1,$2,$3) "
+	_, err := Database.DBconn.Exec(QueryString, todoname, tododescription, userID)
 	if err != nil {
 		return err
-	}
-
-	//todo please ignore count
-	count, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if count == 0 {
-		return fmt.Errorf("no todo crated")
 	}
 	return nil
+	//todo please ignore count
+	//count, err := res.RowsAffected()
+	//if err != nil {
+	//	return err
+	//}
+	//if count == 0 {
+	//	return fmt.Errorf("no todo crated")
+	//}
+	//return nil
 }
 
 func UpdateTodoInDB(todos model.Todos) error {
@@ -69,5 +69,30 @@ func GetIncompleteTodos(userID string) ([]model.Todos, error) {
 
 	todos := make([]model.Todos, 0)
 	Err := Database.DBconn.Select(&todos, query, userID)
+	return todos, Err
+}
+
+func GetCompleteTodos(userID string) ([]model.Todos, error) {
+	query := `SELECT id, userid, todoname, tododescription, is_completed
+			  FROM usertodo
+			  WHERE userid = $1             
+			    AND is_completed = true     
+			    AND archived_at IS NULL`
+
+	todos := make([]model.Todos, 0)
+	Err := Database.DBconn.Select(&todos, query, userID)
+	return todos, Err
+}
+
+// GetAllTodos fetches all active todos for the specified user.
+func GetAllTodos(UserID string) ([]model.Todos, error) {
+	query := `SELECT id,  todoname, tododescription, is_completed,userid
+			  FROM usertodo
+			  WHERE userid = $1             
+			    AND archived_at IS NULL`
+
+	todos := make([]model.Todos, 0)
+	fmt.Println(todos)
+	Err := Database.DBconn.Select(&todos, query, UserID)
 	return todos, Err
 }
