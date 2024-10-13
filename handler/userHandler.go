@@ -45,6 +45,14 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	exists, existsErr := dbHelper.IsUserExists(data.Email)
+
+	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
+		response.RespondJSON(w, http.StatusInternalServerError, "error creating user")
+		return
+	}
+
+	//todo : these check are used upper side i.e before creating the user in db
+
 	if existsErr != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, existsErr, "failed to check user existence")
 		return
@@ -139,6 +147,7 @@ func DeactivateAccount(w http.ResponseWriter, r *http.Request) {
 	userID := userCtx.UserID
 	SessionId := userCtx.SessionID
 
+	//todo := Use Transaction
 	saveErr := dbHelper.DeleteUser(userID)
 	if saveErr != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, saveErr, "failed to delete user account")
