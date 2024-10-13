@@ -40,7 +40,8 @@ func SetupRoutes() *Server {
 	router.Group(func(r chi.Router) {
 		r.Use(middlewares.Authenticate)
 		//task:-here we use middlewre for authentication
-
+		r.Post("/logout", handler.Logout)
+		r.Delete("/deactivate-acc", handler.DeactivateAccount)
 		//r.Get("/data", handler.GetAllTodo) // TODO :- this is only for testing purpose
 		r.Post("/createTodo", handler.CreateTodo)
 		r.Get("/all-todos", handler.GetAllTodos)

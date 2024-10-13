@@ -28,8 +28,8 @@ func CreateUserInDB(UserName, email, password string) error {
 func CreateUserSession(UserId string) (string, error) {
 	var sessionID string
 	query := `INSERT INTO user_session(user_id) 
-              VALUES ($1) RETURNING id`
-	CusErr := Database.DBconn.QueryRow(query, UserId).Scan(&sessionID)
+              VALUES ($1)`
+	CusErr := Database.DBconn.Get(&sessionID, query, UserId)
 
 	if CusErr != nil {
 		return "", CusErr
@@ -47,12 +47,34 @@ func GetUser(email, password string) (string, string, error) {
 	QueryString := `SELECT u.id, u.email, u.password FROM users u
 			  WHERE u.archived_at IS NULL
 			    AND u.email = TRIM($1)`
-	err := Database.DBconn.QueryRowx(QueryString, email).Scan(&storedId, &storedEmail, &hashPassword)
+
+	var results []struct {
+		ID       string
+		Email    string
+		Password string
+	}
+	err := Database.DBconn.Select(&results, QueryString, email)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", "", nil // Return nil if no matching user is found
+			// No matching user row found
+			return "", "", nil
 		}
+		return "", "", err
+	}
+	// Check if we got a result then we check
+	if len(results) == 0 {
+		return "", "", nil
+	}
+
+	// Extract the user data from the results
+	storedId = results[0].ID
+	storedEmail = results[0].Email
+	hashPassword = results[0].Password
+
+	// Verify the password
+	if err := encryption.VerifyPassword(password, hashPassword); err != nil {
+		// Password verification failed
 		return "", "", err
 	}
 
@@ -87,7 +109,7 @@ func DeleteUser(userID string) error {
 	return nil
 
 }
-func UserSessioneDelete(SessionId string) error {
+func UserSessionDelete(SessionId string) error {
 	query := `UPDATE user_session SET
                     archived_at=now() 
                 		WHERE  id= $1

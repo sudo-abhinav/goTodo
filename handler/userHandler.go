@@ -117,7 +117,23 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func DeActivateAccount(w http.ResponseWriter, r *http.Request) {
+func Logout(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	//userID := userCtx.UserID
+	SessionId := userCtx.SessionID
+	Err := dbHelper.UserSessionDelete(SessionId)
+	if Err != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, Err, "Failed to delete user ")
+		return
+	}
+
+	response.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{" logged Out... "})
+
+}
+
+func DeactivateAccount(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 	SessionId := userCtx.SessionID
@@ -128,7 +144,7 @@ func DeActivateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	saveErr = dbHelper.UserSessioneDelete(SessionId)
+	saveErr = dbHelper.UserSessionDelete(SessionId)
 	if saveErr != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, saveErr, "failed to delete user session")
 		return
