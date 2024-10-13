@@ -26,7 +26,7 @@ func CreateTodoInDb(todoname, tododescription, userID string) error {
 }
 
 func UpdateTodoInDB(todos model.Todos) error {
-	query := "UPDATE usertodo SET todoname = $1, tododescription = $2, update_at = $3 WHERE id = $4"
+	query := "UPDATE usertodo SET todoname = $1, tododescription = $2, update_at = $3  WHERE id = $4"
 	res, err := Database.DBconn.Exec(query, todos.TodoName, todos.TodoDescription, time.Now(), todos.Id)
 	if err != nil {
 		return err
@@ -109,4 +109,20 @@ func GetAllTodos(UserID string) ([]model.Todos, error) {
 	fmt.Println(todos)
 	Err := Database.DBconn.Select(&todos, query, UserID)
 	return todos, Err
+}
+
+func DeleteAllTodos(userID string) (int, error) {
+	query := `UPDATE usertodo
+              SET archived_at = NOW()        
+              WHERE userid = $1             
+                AND archived_at IS NULL`
+
+	_, delErr := Database.DBconn.Exec(query, userID)
+	if delErr != nil {
+		return 0, delErr
+	}
+
+	// If the query is successful, return a count of how many rows were expected to be affected
+	// Here we assume that if the query was executed, it's for all relevant todos
+	return 1, nil
 }

@@ -14,35 +14,6 @@ import (
 	"net/http"
 )
 
-//func GetAllTodo(w http.ResponseWriter, r http.Request) {
-//	//w.Header().Set("content-Type", "application/json")
-//	//3.todo define [] using make keyword as possible because it creates by default null
-//	var posts []model.Todos
-//	//defer Database.DbConnectionClose()
-//
-//	//4.todo use select function
-//	rows, err := Database.DBconn.Query("select usertodo.id , usertodo.todoname , usertodo.tododescription from usertodo")
-//	if err != nil {
-//		return
-//	}
-//	//log.Print(rows)
-//	for rows.Next() {
-//		//data := model.Todos{}
-//		var data model.Todos
-//		err := rows.Scan(&data.Id, &data.TodoName, &data.TodoDescription, &data.IsCompleted)
-//		if err != nil {
-//			fmt.Println("error", err)
-//
-//		}
-//		posts = append(posts, data)
-//	}
-//	log.Print(posts)
-//	err = json.NewEncoder(w).Encode(posts)
-//	if err != nil {
-//		return
-//	}
-//}
-
 func InCompleteTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
@@ -148,6 +119,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.RespondJSON(w, http.StatusCreated, "Todo Update..")
+	response.RespondJSON(w, http.StatusCreated, "Todo Update..")
 	//json.NewEncoder(w).Encode("Todo Updated")
 }
 
@@ -166,4 +138,23 @@ func GetComoleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 	response.RespondJSON(w, http.StatusCreated, todos)
 
+}
+
+func DeleteAll(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	res, err := dbHelper.DeleteAllTodos(userID)
+	if err != nil {
+		response.RespondWithError(w, http.StatusBadRequest, err, "Error in Deleting All todo")
+	}
+
+	if res == 0 {
+		response.RespondWithError(w, http.StatusNotFound, nil, "No todo found")
+		return
+	}
+
+	response.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"all todos deleted successfully"})
 }

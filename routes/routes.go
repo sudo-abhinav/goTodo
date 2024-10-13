@@ -48,6 +48,7 @@ func SetupRoutes() *Server {
 		r.Get("/pending-todo", handler.InCompleteTodos)
 		r.Get("/complete-todo", handler.GetComoleteTodo)
 		r.Delete(`/deleteById/{id}`, handler.DeleteTodoById)
+		r.Delete("/delete-all", handler.DeleteAll)
 		r.Put("/update-todo", handler.UpdateTodo)
 	})
 	return &Server{
