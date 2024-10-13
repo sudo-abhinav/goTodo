@@ -1,16 +1,17 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/pkg/errors"
 	"github.com/sudo-abhinav/go-todo/Database/dbHelper"
 	"github.com/sudo-abhinav/go-todo/middlewares"
 	"github.com/sudo-abhinav/go-todo/model"
 	"github.com/sudo-abhinav/go-todo/utils/response"
 	_ "github.com/sudo-abhinav/go-todo/utils/response"
 	"net/http"
-	"strconv"
 )
 
 //func GetAllTodo(w http.ResponseWriter, r http.Request) {
@@ -42,7 +43,7 @@ import (
 //	}
 //}
 
-func IncomoleteTodos(w http.ResponseWriter, r *http.Request) {
+func InCompleteTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
@@ -59,6 +60,7 @@ func IncomoleteTodos(w http.ResponseWriter, r *http.Request) {
 	response.RespondJSON(w, http.StatusCreated, todos)
 }
 
+// completed services
 func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
@@ -78,18 +80,16 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 	response.RespondJSON(w, http.StatusCreated, todos)
 }
 
-// completed services
 func CreateTodo(w http.ResponseWriter, r *http.Request) {
 
-	//log.Print("just print", r.Body)
-	if r.Body == nil {
-		json.NewEncoder(w).Encode("please send some data")
-
-	}
-
 	var todos model.Todos
+
+	if parseErr := response.ParseBody(r.Body, &todos); parseErr != nil {
+		response.RespondWithError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
+		return
+	}
 	userCtx := middlewares.UserContext(r)
-	todos.UserId = userCtx.UserID
+	UserId := userCtx.UserID
 	fmt.Println(todos.UserId, "this token came from context")
 	if parseErr := response.ParseBody(r.Body, &todos); parseErr != nil {
 		response.RespondJSON(w, http.StatusBadRequest, "failed to parse request body")
@@ -98,7 +98,7 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(todos.TodoName, todos.TodoDescription, todos.UserId)
 
-	if err := dbHelper.CreateTodoInDb(todos.TodoName, todos.TodoDescription, todos.UserId); err != nil {
+	if err := dbHelper.CreateTodoInDb(todos.TodoName, todos.TodoDescription, UserId); err != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, err, "error creating todo")
 		return
 	}
@@ -108,24 +108,28 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 
 func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
 	param := chi.URLParam(r, "id")
 	fmt.Println(param)
 
-	id, err := strconv.Atoi(param)
-	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+	if param == "" {
+		response.RespondWithError(w, http.StatusBadRequest, nil, "Missing ID parameter")
 		return
 	}
-	deleteTodo := model.DeleteTodos{Id: id}
-
-	err = dbHelper.DeleteTodoInDB(deleteTodo)
+	// Call the database helper to delete the todo item
+	err := dbHelper.DeleteTodoInDB(param, userID)
 	if err != nil {
-		response.RespondWithError(w, http.StatusInternalServerError, err, "error Deleting todo")
+		// Check if the error is due to the item not found or other reasons
+		if errors.Is(err, sql.ErrNoRows) {
+			response.RespondWithError(w, http.StatusNotFound, err, "Todo not found")
+		} else {
+			response.RespondWithError(w, http.StatusInternalServerError, err, "Error deleting todo")
+		}
 		return
-
 	}
-
-	response.RespondJSON(w, http.StatusOK, "Todo Update..")
+	response.RespondJSON(w, http.StatusOK, "Todo Deleted..")
 	//json.NewEncoder(w).Encode("Todo Deleted")
 }
 
@@ -145,4 +149,21 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	}
 	response.RespondJSON(w, http.StatusCreated, "Todo Update..")
 	//json.NewEncoder(w).Encode("Todo Updated")
+}
+
+func GetComoleteTodo(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	todos, err := dbHelper.GetCompleteTodos(userID)
+	if err != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, err, "error in Getting completed todo")
+		return
+	}
+	if len(todos) == 0 {
+		response.RespondWithError(w, http.StatusNotFound, err, "no todo found")
+		return
+	}
+	response.RespondJSON(w, http.StatusCreated, todos)
+
 }

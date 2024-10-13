@@ -9,7 +9,7 @@ type Todos struct {
 }
 
 type DeleteTodos struct {
-	Id int `json:"id" db:"id"`
+	Id string `json:"id" db:"id"`
 }
 
 //type UpdateTodos struct {

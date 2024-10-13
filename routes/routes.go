@@ -43,10 +43,11 @@ func SetupRoutes() *Server {
 
 		//r.Get("/data", handler.GetAllTodo) // TODO :- this is only for testing purpose
 		r.Post("/createTodo", handler.CreateTodo)
-		r.Get("/alltodos", handler.GetAllTodos)
-		r.Get("/pending-todo", handler.IncomoleteTodos)
+		r.Get("/all-todos", handler.GetAllTodos)
+		r.Get("/pending-todo", handler.InCompleteTodos)
+		r.Get("/complete-todo", handler.GetComoleteTodo)
 		r.Delete(`/deleteById/{id}`, handler.DeleteTodoById)
-		r.Put("/updatetodo", handler.UpdateTodo)
+		r.Put("/update-todo", handler.UpdateTodo)
 	})
 	return &Server{
 		Router: router,

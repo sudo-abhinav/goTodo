@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/sudo-abhinav/go-todo/Database/dbHelper"
+	"github.com/sudo-abhinav/go-todo/middlewares"
 	"github.com/sudo-abhinav/go-todo/model"
 	"github.com/sudo-abhinav/go-todo/utils/encryption"
 	"github.com/sudo-abhinav/go-todo/utils/response"
@@ -113,5 +114,24 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	//	Expires: time.Now().Add(time.Minute * 2),
 	//})
 	//response.RespondJSON(w, http.StatusCreated, "loggedIn")
+
+}
+
+func DeActivateAccount(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+	SessionId := userCtx.SessionID
+
+	saveErr := dbHelper.DeleteUser(userID)
+	if saveErr != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, saveErr, "failed to delete user account")
+		return
+	}
+
+	saveErr = dbHelper.UserSessioneDelete(SessionId)
+	if saveErr != nil {
+		response.RespondWithError(w, http.StatusInternalServerError, saveErr, "failed to delete user session")
+		return
+	}
 
 }

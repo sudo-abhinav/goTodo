@@ -71,13 +71,32 @@ func IsUserExists(email string) (bool, error) {
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return false, err
 	}
-	//if errors.Is(err, sql.ErrNoRows) {
-	//	return false, nil
-	//}
 	return UserExisting, nil
 }
 
-func DeleteUser() {
+func DeleteUser(userID string) error {
+	query := `UPDATE users SET
+                    archived_at=now() 
+                		WHERE  id= $1
+                		  AND archived_at IS NULL`
+	//res, err := Database.DBconn.Exec("DELETE FROM usertodo WHERE id=$1", param.Id)
+	_, Err := Database.DBconn.Exec(query, userID)
+	if Err != nil {
+		return Err
+	}
+	return nil
+
+}
+func UserSessioneDelete(SessionId string) error {
+	query := `UPDATE user_session SET
+                    archived_at=now() 
+                		WHERE  id= $1
+                		  AND archived_at IS NULL`
+	_, Err := Database.DBconn.Exec(query, SessionId)
+	if Err != nil {
+		return Err
+	}
+	return nil
 
 }
 

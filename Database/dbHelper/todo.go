@@ -45,19 +45,19 @@ func UpdateTodoInDB(todos model.Todos) error {
 }
 
 // 5.todo use archived _at column not hard delete the data
-func DeleteTodoInDB(param model.DeleteTodos) error {
-	res, err := Database.DBconn.Exec("DELETE FROM usertodo WHERE id=$1", param.Id)
-	if err != nil {
-		return err
-	}
-	count, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if count == 0 {
-		return fmt.Errorf("No Todo Found with id %d", param.Id)
+func DeleteTodoInDB(deleteTodo, userID string) error {
+	query := `UPDATE usertodo SET
+                    archived_at=now() 
+                		WHERE  id= $1 AND 
+                		    userid=$2 
+                		  AND archived_at IS NULL`
+	//res, err := Database.DBconn.Exec("DELETE FROM usertodo WHERE id=$1", param.Id)
+	_, Err := Database.DBconn.Exec(query, deleteTodo, userID)
+	if Err != nil {
+		return Err
 	}
 	return nil
+
 }
 
 func GetIncompleteTodos(userID string) ([]model.Todos, error) {
@@ -82,6 +82,20 @@ func GetCompleteTodos(userID string) ([]model.Todos, error) {
 	todos := make([]model.Todos, 0)
 	Err := Database.DBconn.Select(&todos, query, userID)
 	return todos, Err
+}
+
+func MarkCompleted(id, userID string) error {
+	query := `UPDATE usertodo
+              SET is_completed = true        
+              WHERE id = $1                  
+                AND userid = $2             
+                AND archived_at IS NULL`
+
+	_, Err := Database.DBconn.Exec(query, id, userID)
+	if Err != nil {
+		return Err
+	}
+	return nil
 }
 
 // GetAllTodos fetches all active todos for the specified user.
