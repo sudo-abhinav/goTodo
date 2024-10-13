@@ -45,12 +45,14 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	exists, existsErr := dbHelper.IsUserExists(data.Email)
+
 	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
 		response.RespondJSON(w, http.StatusInternalServerError, "error creating user")
 		return
 	}
 
 	//todo : these check are used upper side i.e before creating the user in db
+
 	if existsErr != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, existsErr, "failed to check user existence")
 		return
@@ -60,6 +62,11 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		response.RespondJSON(w, http.StatusBadRequest, "user already exists")
 		return
 	}
+	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
+		response.RespondJSON(w, http.StatusInternalServerError, "error creating user")
+		return
+	}
+
 	response.RespondJSON(w, http.StatusCreated, "user Registered..")
 
 }
