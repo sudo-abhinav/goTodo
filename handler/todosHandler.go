@@ -93,6 +93,7 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 	err := dbHelper.DeleteTodoInDB(param, userID)
 	if err != nil {
 		// Check if the error is due to the item not found or other reasons
+		//todo do not check this condtion this condition will arise in get condtion
 		if errors.Is(err, sql.ErrNoRows) {
 			response.RespondWithError(w, http.StatusNotFound, err, "Todo not found")
 		} else {
@@ -114,12 +115,13 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		response.RespondWithError(w, http.StatusBadRequest, err, "invalid request payload")
 		return
 	}
+	//todo update with the check of user id which is created by him or not
 	if err := dbHelper.UpdateTodoInDB(todos); err != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, err, "error updating todo")
 		return
 	}
-	response.RespondJSON(w, http.StatusCreated, "Todo Update..")
-	response.RespondJSON(w, http.StatusCreated, "Todo Update..")
+
+	response.RespondJSON(w, http.StatusOK, "Todo Update..")
 	//json.NewEncoder(w).Encode("Todo Updated")
 }
 

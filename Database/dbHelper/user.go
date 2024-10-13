@@ -53,6 +53,8 @@ func GetUser(email, password string) (string, string, error) {
 		Email    string
 		Password string
 	}
+
+	// TODO use get because you are not getting an array
 	err := Database.DBconn.Select(&results, QueryString, email)
 
 	if err != nil {
@@ -127,6 +129,7 @@ func GetArchivedAt(sessionID string) (*time.Time, error) {
 
 	query := `SELECT archived_at FROM user_session WHERE id = $1`
 
+	//TODO use get not queryRowx
 	getErr := Database.DBconn.QueryRow(query, sessionID).Scan(&archivedAt)
 	if getErr != nil {
 		return nil, getErr // Return error if the query fails
