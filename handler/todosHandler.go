@@ -105,8 +105,8 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 
-	userCtx := middlewares.UserContext(r)
-	userID := userCtx.UserID
+	//userCtx := middlewares.UserContext(r)
+	//userID := userCtx.UserID
 
 	if r.Body == nil {
 		response.RespondJSON(w, http.StatusBadRequest, "please send all data")
