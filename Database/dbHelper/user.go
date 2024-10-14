@@ -26,6 +26,7 @@ func CreateUserInDB(UserName, email, password string) error {
 
 }
 func CreateUserSession(UserId string) (string, error) {
+	// You are not returning id in sql query and using Get()
 	var sessionID string
 	query := `INSERT INTO user_session(user_id) 
               VALUES ($1)`
@@ -48,11 +49,14 @@ func GetUser(email, password string) (string, string, error) {
 			  WHERE u.archived_at IS NULL
 			    AND u.email = TRIM($1)`
 
+	// model should be in model folder
 	var results []struct {
 		ID       string
 		Email    string
 		Password string
 	}
+
+	// why are you using Select() for single row output.
 
 	// TODO use get because you are not getting an array
 	err := Database.DBconn.Select(&results, QueryString, email)
