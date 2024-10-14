@@ -54,8 +54,8 @@ func GetUser(email, password string) (string, string, error) {
 		Password string
 	}
 
-	// TODO use get because you are not getting an array
-	err := Database.DBconn.Select(&results, QueryString, email)
+	// TODO use get because you are not getting an array :=  Done
+	err := Database.DBconn.Get(&results, QueryString, email)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

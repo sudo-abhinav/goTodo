@@ -51,8 +51,7 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo : these check are used upper side i.e before creating the user in db
-
+	//todo : these check are used upper side i.e before creating the user in db : done @deepak-
 	if existsErr != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, existsErr, "failed to check user existence")
 		return

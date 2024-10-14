@@ -15,14 +15,6 @@ func CreateTodoInDb(todoname, tododescription, userID string) error {
 	}
 	return nil
 	//todo please ignore count
-	//count, err := res.RowsAffected()
-	//if err != nil {
-	//	return err
-	//}
-	//if count == 0 {
-	//	return fmt.Errorf("no todo crated")
-	//}
-	//return nil
 }
 
 func UpdateTodoInDB(todos model.Todos) error {
