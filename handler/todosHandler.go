@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/pkg/errors"
 	"github.com/sudo-abhinav/go-todo/Database/dbHelper"
 	"github.com/sudo-abhinav/go-todo/middlewares"
 	"github.com/sudo-abhinav/go-todo/model"
@@ -87,16 +89,16 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 		response.RespondWithError(w, http.StatusBadRequest, nil, "Missing ID parameter")
 		return
 	}
-	// Call the database helper to delete the item
+	// Call the database helper to delete the todo item
 	err := dbHelper.DeleteTodoInDB(param, userID)
 	if err != nil {
 		// Check if the error is due to the item not found or other reasons
-		//Todo do not check this condition this condition will arise in get condtion
-		//if errors.Is(err, sql.ErrNoRows) {
-		response.RespondWithError(w, http.StatusNotFound, err, "Todo not found")
-		//} else {
-		//	response.RespondWithError(w, http.StatusInternalServerError, err, "Error deleting todo")
-		//}
+		//todo do not check this condtion this condition will arise in get condtion
+		if errors.Is(err, sql.ErrNoRows) {
+			response.RespondWithError(w, http.StatusNotFound, err, "Todo not found")
+		} else {
+			response.RespondWithError(w, http.StatusInternalServerError, err, "Error deleting todo")
+		}
 		return
 	}
 	response.RespondJSON(w, http.StatusOK, "Todo Deleted..")
@@ -104,10 +106,6 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
-
-	//userCtx := middlewares.UserContext(r)
-	//userID := userCtx.UserID
-
 	if r.Body == nil {
 		response.RespondJSON(w, http.StatusBadRequest, "please send all data")
 		return
@@ -117,9 +115,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		response.RespondWithError(w, http.StatusBadRequest, err, "invalid request payload")
 		return
 	}
-
 	//todo update with the check of user id which is created by him or not
-
 	if err := dbHelper.UpdateTodoInDB(todos); err != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, err, "error updating todo")
 		return
@@ -164,19 +160,3 @@ func DeleteAll(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 	}{"all todos deleted successfully"})
 }
-
-//go func UpdateTodo(w http.ResponseWriter, r *http.Request)
-//{
-//	userCtx := middlewares.UserContext(r)userID := userCtx.UserID
-//	if
-//	r.Body == nil {response.RespondJSON(w, http.StatusBadRequest, "please send all data")return}
-// todos model.Todosif err := json.NewDecoder(r.Body).Decode(&todos)err != nil
-//{response.RespondWithError(w, http.StatusBadRequest, err, "invalid request payload")return}
-//
-//
-//Todo, err := dbHelper.GetTodoByID(todos.ID)if err != nil {response.RespondWithError(w, http.StatusInternalServerError, err, "error retrieving todo")return}//
-//
-// existingTodo.UserID != userID {response.RespondJSON(w, http.StatusForbidden, "you do not have permission to update this todo")return}//
-//Proceed to update the todoif err := dbHelper.UpdateTodoInDB(todos)
-//err != nil {response.RespondWithError(w, http.StatusInternalServerError, err, "error updating todo")return
-//}response.RespondJSON(w, http.StatusOK, "Todo Updated")}
