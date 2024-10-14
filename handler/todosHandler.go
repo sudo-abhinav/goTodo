@@ -62,6 +62,8 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	UserId := userCtx.UserID
 	fmt.Println(todos.UserId, "this token came from context")
+
+	// why are you parsing body twice ?
 	if parseErr := response.ParseBody(r.Body, &todos); parseErr != nil {
 		response.RespondJSON(w, http.StatusBadRequest, "failed to parse request body")
 		return
@@ -106,6 +108,7 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
+	// use parseBody() function here
 	if r.Body == nil {
 		response.RespondJSON(w, http.StatusBadRequest, "please send all data")
 		return

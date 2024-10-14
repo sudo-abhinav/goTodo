@@ -36,6 +36,8 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		response.RespondJSON(w, http.StatusBadRequest, "invalid request payload")
 		return
 	}
+
+	// Use validate()
 	if data.UserName == "" && data.Email == "" && data.Password == "" {
 		response.RespondJSON(w, http.StatusBadRequest, "username, email, and password are required")
 		return
@@ -45,6 +47,7 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	exists, existsErr := dbHelper.IsUserExists(data.Email)
+	// handle error
 
 	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
 		response.RespondJSON(w, http.StatusInternalServerError, "error creating user")
@@ -53,6 +56,7 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 
 	//todo : these check are used upper side i.e before creating the user in db
 
+	// why are you checking the existence of user after inserting data into db
 	if existsErr != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, existsErr, "failed to check user existence")
 		return
@@ -62,6 +66,7 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		response.RespondJSON(w, http.StatusBadRequest, "user already exists")
 		return
 	}
+	// Repeated code
 	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
 		response.RespondJSON(w, http.StatusInternalServerError, "error creating user")
 		return
@@ -75,6 +80,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(r.Body)
 
+	// No need of this because you are parsing the data in next step
 	if r.Body == nil {
 		//response.RespondJSON(w, http.StatusBadRequest, "please send some data")
 		err := json.NewEncoder(w).Encode("please send some data")
@@ -146,6 +152,8 @@ func DeactivateAccount(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 	SessionId := userCtx.SessionID
+
+	// Use transaction here
 
 	//todo := Use Transaction
 	saveErr := dbHelper.DeleteUser(userID)

@@ -1,5 +1,7 @@
 package model
 
+// use validate for input validation and make two models separately for request and response
+
 // 1.todo do not use primary key and it is use serial in db auto which is auto genrated
 type UserReg struct {
 	Id       string `json:"id" db:"id "`
