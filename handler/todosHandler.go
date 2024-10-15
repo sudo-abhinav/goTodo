@@ -2,7 +2,6 @@ package handler
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/pkg/errors"
@@ -54,13 +53,13 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 func CreateTodo(w http.ResponseWriter, r *http.Request) {
 
 	var todos model.Todos
+	userCtx := middlewares.UserContext(r)
+	UserId := userCtx.UserID
 
 	if parseErr := response.ParseBody(r.Body, &todos); parseErr != nil {
 		response.RespondWithError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
 		return
 	}
-	userCtx := middlewares.UserContext(r)
-	UserId := userCtx.UserID
 	fmt.Println(todos.UserId, "this token came from context")
 	if parseErr := response.ParseBody(r.Body, &todos); parseErr != nil {
 		response.RespondJSON(w, http.StatusBadRequest, "failed to parse request body")
@@ -106,23 +105,37 @@ func DeleteTodoById(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		response.RespondJSON(w, http.StatusBadRequest, "please send all data")
-		return
-	}
+	//if r.Body == nil {
+	//	response.RespondJSON(w, http.StatusBadRequest, "please send all data")
+	//	return
+	//}
 	var todos model.Todos
-	if err := json.NewDecoder(r.Body).Decode(&todos); err != nil {
-		response.RespondWithError(w, http.StatusBadRequest, err, "invalid request payload")
+	if parseErr := response.ParseBody(r.Body, &todos); parseErr != nil {
+		response.RespondWithError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
 		return
 	}
-	//todo update with the check of user id which is created by him or not
+	//todo update with the check of user id which is created by him or not :- done
+
+	userCtx := middlewares.UserContext(r)
+	userID := userCtx.UserID
+
+	// Verify that the todo belongs to the user
+	existingTodo, err := dbHelper.GetTodoByID(todos.Id) // Fetch existing todo by ID
+	if err != nil {
+		response.RespondWithError(w, http.StatusNotFound, err, "todo not found")
+		return
+	}
+
+	if existingTodo.Id != userID {
+		response.RespondJSON(w, http.StatusForbidden, "you are not allowed to update this todo")
+		return
+	}
+
 	if err := dbHelper.UpdateTodoInDB(todos); err != nil {
 		response.RespondWithError(w, http.StatusInternalServerError, err, "error updating todo")
 		return
 	}
-
 	response.RespondJSON(w, http.StatusOK, "Todo Update..")
-	//json.NewEncoder(w).Encode("Todo Updated")
 }
 
 func GetComoleteTodo(w http.ResponseWriter, r *http.Request) {

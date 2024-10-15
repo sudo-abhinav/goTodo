@@ -11,39 +11,6 @@ import (
 	"strings"
 )
 
-// import (
-//
-//	"context"
-//	"fmt"
-//	"github.com/sudo-abhinav/go-todo/utils/encryption"
-//	"net/http"
-//
-// )
-//
-//	func Authentication(next http.Handler) http.Handler {
-//		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//			cookie, err := r.Cookie("Token")
-//			if err != nil {
-//				http.Error(w, "Unauthorized: missing cookie", http.StatusUnauthorized)
-//				fmt.Println(err)
-//				return
-//			}
-//			fmt.Println(cookie)
-//
-//			tokenString := cookie.Value
-//			claims, err := encryption.VerifyJWT(tokenString)
-//			if err != nil {
-//				http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
-//				return
-//			}
-//
-//			ctx := r.Context()
-//			ctx = context.WithValue(ctx, "claims", claims)
-//			r = r.WithContext(ctx)
-//
-//			next.ServeHTTP(w, r)
-//		})
-//	}
 type ContextKeys string
 
 const (

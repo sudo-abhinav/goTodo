@@ -2,6 +2,7 @@ package dbHelper
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sudo-abhinav/go-todo/Database"
 	"github.com/sudo-abhinav/go-todo/model"
 	"time"
@@ -117,4 +118,25 @@ func DeleteAllTodos(userID string) (int, error) {
 	// If the query is successful, return a count of how many rows were expected to be affected
 	// Here we assume that if the query was executed, it's for all relevant todos
 	return 1, nil
+}
+
+// GetTodoByID retrieves a todo item by its ID from the database.
+func GetTodoByID(todoID string) (*model.Todos, error) {
+	var todos []model.Todos // Use a slice to hold the results
+
+	// Prepare the SQL query to select the todo item
+	query := `SELECT id, todoname, tododescription FROM usertodo WHERE id = ?`
+
+	// Use the Select function to execute the query
+	err := Database.DBconn.Select(&todos, query, todoID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have any results
+	if len(todos) == 0 {
+		return nil, errors.New("todo not found")
+	}
+
+	return &todos[0], nil // Return the first todo
 }
