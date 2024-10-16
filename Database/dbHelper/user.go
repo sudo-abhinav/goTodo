@@ -99,22 +99,6 @@ func IsUserExists(email string) (bool, error) {
 	return Usercheck, Err
 }
 
-/*
-func IsUserExists(email string) (bool, error) {
-	// language=SQL
-	SQL := `SELECT id FROM users WHERE email = TRIM(LOWER($1)) AND archived_at IS NULL`
-	var id string
-	err := database.Todo.Get(&id, SQL, email)
-	if err != nil && err != sql.ErrNoRows {
-		return false, err
-	}
-	if err == sql.ErrNoRows {
-		return false, nil
-	}
-	return true, nil
-}
-*/
-
 func DeleteUser(userID string) error {
 	query := `UPDATE users SET
                     archived_at=now() 
