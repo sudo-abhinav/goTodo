@@ -16,7 +16,7 @@ func CreateUserInDB(UserName, email, password string) error {
 	if err != nil {
 		return fmt.Errorf("error hashing password: %w", err)
 	}
-	queryString := `INSERT INTO users (username, email, password) VALUES ($1, lower($2), $3)`
+	queryString := `INSERT INTO users (username, email, password) VALUES ($1, trim(lower($2)), $3)`
 	_, err = Database.DBconn.Exec(queryString, UserName, email, hashPWD)
 
 	if err != nil {
@@ -89,14 +89,31 @@ func GetUser(email, password string) (string, string, error) {
 }
 
 func IsUserExists(email string) (bool, error) {
-	SQLQuery := `SELECT email from users WHERE email = TRIM(LOWER($1))`
-	var UserExisting bool
-	err := Database.DBconn.Get(&UserExisting, SQLQuery, email)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	SQL := `SELECT count(id) > 0 as is_exist
+			  FROM users
+			  WHERE email = TRIM($1)
+			    AND archived_at IS NULL`
+
+	var Usercheck bool
+	Err := Database.DBconn.Get(&Usercheck, SQL, email)
+	return Usercheck, Err
+}
+
+/*
+func IsUserExists(email string) (bool, error) {
+	// language=SQL
+	SQL := `SELECT id FROM users WHERE email = TRIM(LOWER($1)) AND archived_at IS NULL`
+	var id string
+	err := database.Todo.Get(&id, SQL, email)
+	if err != nil && err != sql.ErrNoRows {
 		return false, err
 	}
-	return UserExisting, nil
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	return true, nil
 }
+*/
 
 func DeleteUser(userID string) error {
 	query := `UPDATE users SET

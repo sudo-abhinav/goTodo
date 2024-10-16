@@ -40,16 +40,8 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 		response.RespondJSON(w, http.StatusBadRequest, "username, email, and password are required")
 		return
 	}
-	if len(data.Password) <= 6 {
-		response.RespondJSON(w, http.StatusBadRequest, "password length greater than 6 char")
-		return
-	}
-	exists, existsErr := dbHelper.IsUserExists(data.Email)
 
-	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
-		response.RespondJSON(w, http.StatusInternalServerError, "error creating user")
-		return
-	}
+	exists, existsErr := dbHelper.IsUserExists(data.Email)
 
 	//todo : these check are used upper side i.e before creating the user in db
 
@@ -60,6 +52,10 @@ func UserRegistration(w http.ResponseWriter, r *http.Request) {
 
 	if exists {
 		response.RespondJSON(w, http.StatusBadRequest, "user already exists")
+		return
+	}
+	if len(data.Password) < 6 {
+		response.RespondJSON(w, http.StatusBadRequest, "password length greater than 6 char")
 		return
 	}
 	if err := dbHelper.CreateUserInDB(data.UserName, data.Email, data.Password); err != nil {
