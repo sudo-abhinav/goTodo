@@ -15,7 +15,7 @@ func CreateTodoInDb(todoname, tododescription, userID string) error {
 		return err
 	}
 	return nil
-	//todo please ignore count
+	//todo please ignore count :- Done
 }
 
 func UpdateTodoInDB(todos model.Todos) error {
